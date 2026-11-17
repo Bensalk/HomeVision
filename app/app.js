@@ -1,10 +1,10 @@
-// HomeVision v0.2.0 â ES5 IIFE â Chromium 53 / webOS 4.x compatible
+// HomeVision v0.2.0 — ES5 IIFE — Chromium 53 / webOS 4.x compatible
 (function () {
   'use strict';
 
-  var VERSION = '0.2.1';
+  var VERSION = '0.3.0';
 
-  // ââ Themes âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
     { name: 'Midnight', bg: '#0B0D14', surface: '#151826', accent: '#7C5CFF', glow: '#1A1440' },
     { name: 'AMOLED',   bg: '#000000', surface: '#111111', accent: '#FFFFFF', glow: '#000000' },
@@ -18,7 +18,7 @@
     { name: 'Slate',    bg: '#0E1116', surface: '#1A1F27', accent: '#9AA7B8', glow: '#232A35' }
   ];
 
-  // ââ IPTV-org library (same as PadVision) ââââââââââââââââââââââââââââââââ
+  // ── IPTV-org library (same as PadVision) ────────────────────────────────
   var BASE = 'https://iptv-org.github.io/iptv/';
   var LIBRARY = [
     { section: 'Popular',              name: 'India',                  url: BASE + 'countries/in.m3u' },
@@ -97,7 +97,7 @@
     { section: 'Countries',            name: 'Egypt',                  url: BASE + 'countries/eg.m3u' }
   ];
 
-  // ââ Storage helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Storage helpers ──────────────────────────────────────────────────────
   function storageGet(key, def) {
     try { var v = localStorage.getItem(key); return v === null ? def : v; } catch(e) { return def; }
   }
@@ -106,7 +106,7 @@
   }
   function storageGetInt(key, def) { return parseInt(storageGet(key, def), 10) || def; }
 
-  // ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── State ────────────────────────────────────────────────────────────────
   var currentScreen = 'home';
   var focusedEl = null;
   var channels = [];           // currently loaded channel list
@@ -124,11 +124,11 @@
 
   var SCREENS = ['home', 'live', 'library', 'search', 'settings', 'about'];
 
-  // ââ DOM helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── DOM helpers ──────────────────────────────────────────────────────────
   function $(id) { return document.getElementById(id); }
   function all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
 
-  // ââ Theme ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Theme ────────────────────────────────────────────────────────────────
   function applyTheme(idx) {
     themeIndex = idx;
     storageSet('hv_theme', idx);
@@ -144,7 +144,7 @@
     document.body.style.background = t.bg;
   }
 
-  // ââ Focus management âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Focus management ─────────────────────────────────────────────────────
   function visibleFocusables() {
     return all('.focusable').filter(function (el) {
       return el.offsetWidth > 0 && el.offsetHeight > 0;
@@ -190,7 +190,7 @@
     if (best) setFocus(best);
   }
 
-  // ââ Aspect ratio âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Aspect ratio ─────────────────────────────────────────────────────────
   function applyAspect(mode) {
     aspectMode = mode;
     storageSet('hv_aspect', mode);
@@ -206,7 +206,7 @@
     applyAspect((aspectMode + 1) % ASPECT_MODES.length);
   }
 
-  // ââ Fullscreen ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Fullscreen ────────────────────────────────────────────────────────────
   function isFullscreen() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement ||
               document.mozFullScreenElement);
@@ -220,26 +220,26 @@
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-      if (fsLabel) fsLabel.textContent = 'â¶ Full';
+      if (fsLabel) fsLabel.textContent = '⛶ Full';
     } else {
       if (wrap.requestFullscreen) wrap.requestFullscreen();
       else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
       else if (wrap.mozRequestFullScreen) wrap.mozRequestFullScreen();
-      if (fsLabel) fsLabel.textContent = 'â Exit';
+      if (fsLabel) fsLabel.textContent = '✕ Exit';
     }
   }
 
   // Handle fullscreen change events
   document.addEventListener('fullscreenchange', function () {
     var fsLabel = $('ctrl-fs-label');
-    if (fsLabel) fsLabel.textContent = isFullscreen() ? 'â Exit' : 'â¶ Full';
+    if (fsLabel) fsLabel.textContent = isFullscreen() ? '✕ Exit' : '⛶ Full';
   });
   document.addEventListener('webkitfullscreenchange', function () {
     var fsLabel = $('ctrl-fs-label');
-    if (fsLabel) fsLabel.textContent = isFullscreen() ? 'â Exit' : 'â¶ Full';
+    if (fsLabel) fsLabel.textContent = isFullscreen() ? '✕ Exit' : '⛶ Full';
   });
 
-  // ââ Player controls overlay show/hide âââââââââââââââââââââââââââââââââââââ
+  // ── Player controls overlay show/hide ─────────────────────────────────────
   function showPlayerControls() {
     var ctrl = $('player-controls');
     if (!ctrl) return;
@@ -255,7 +255,7 @@
     }, 5000);
   }
 
-  // ââ Screen navigation âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Screen navigation ─────────────────────────────────────────────────────
   function showScreen(name) {
     currentScreen = name;
     for (var i = 0; i < SCREENS.length; i++) {
@@ -282,7 +282,7 @@
     }
   }
 
-  // ââ Activate (OK press or click) âââââââââââââââââââââââââââââââââââââââââ
+  // ── Activate (OK press or click) ─────────────────────────────────────────
   function activate() {
     if (!focusedEl) return;
     var sc = focusedEl.getAttribute('data-screen');
@@ -327,12 +327,12 @@
       setTimeout(function () { setFocus(document.querySelector('.menu-item[data-screen="home"]')); }, 60);
       return;
     }
-    // 4. Already on home â do nothing (prevent app exit)
+    // 4. Already on home — do nothing (prevent app exit)
     // On WebOS, pressing back on home could exit; keep user in app instead.
     // Only allow platform back if user confirms (here we just do nothing).
   }
 
-  // ââ Keyboard handler ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Keyboard handler ──────────────────────────────────────────────────────
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode;
     var isInput = focusedEl && (focusedEl.tagName === 'INPUT' || focusedEl.tagName === 'TEXTAREA');
@@ -348,7 +348,7 @@
     } else if (k === 38) {
       if (!isInput) { move('up'); e.preventDefault(); }
       else if (isChSearch) {
-        // Up from channel search â sidebar menu
+        // Up from channel search → sidebar menu
         move('up'); e.preventDefault();
       }
     } else if (k === 39) {
@@ -356,7 +356,7 @@
     } else if (k === 40) {
       if (!isInput) { move('down'); e.preventDefault(); }
       else if (isChSearch) {
-        // Down from channel search â first channel item
+        // Down from channel search → first channel item
         var firstCh = document.querySelector('#ch-list .ch-item');
         if (firstCh) { setFocus(firstCh); e.preventDefault(); }
         else { move('down'); e.preventDefault(); }
@@ -368,7 +368,7 @@
     }
   });
 
-  // ââ Magic Remote hover & click ââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Magic Remote hover & click ────────────────────────────────────────────
   document.addEventListener('mouseover', function (e) {
     var el = e.target;
     while (el && el !== document.body) {
@@ -388,7 +388,7 @@
     }
   });
 
-  // ââ M3U parser âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── M3U parser ───────────────────────────────────────────────────────────
   function parseM3u(text) {
     var out = [];
     var name = '', group = 'Other', logo = null;
@@ -417,7 +417,7 @@
     return out;
   }
 
-  // ââ XHR fetch ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── XHR fetch ────────────────────────────────────────────────────────────
   function xhrGet(url, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -434,10 +434,10 @@
     xhr.send();
   }
 
-  // ââ Load playlist âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Load playlist ─────────────────────────────────────────────────────────
   function loadPlaylist(url, label) {
     var libStatus = $('lib-status');
-    if (libStatus) libStatus.textContent = 'Loading ' + (label || url) + 'â¦';
+    if (libStatus) libStatus.textContent = 'Loading ' + (label || url) + '…';
     xhrGet(url, function (err, text) {
       if (err) {
         if (libStatus) libStatus.textContent = 'Failed to load: ' + err;
@@ -459,7 +459,7 @@
     });
   }
 
-  // ââ Channel list renderer âââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Channel list renderer ─────────────────────────────────────────────────
   function renderChannelList() {
     var list = $('ch-list');
     var empty = $('ch-empty');
@@ -489,7 +489,7 @@
     }
   }
 
-  // ââ Channel search input ââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Channel search input ──────────────────────────────────────────────────
   var chSearchTimer = null;
   var chSearchEl = $('ch-search');
   if (chSearchEl) {
@@ -508,7 +508,7 @@
     searchInputEl.addEventListener('focus', function () { setFocus(searchInputEl); });
   }
 
-  // ââ Play channel by index in filteredChannels âââââââââââââââââââââââââââââ
+  // ── Play channel by index in filteredChannels ─────────────────────────────
   function playChannel(idx) {
     var c = filteredChannels[idx];
     if (!c) return;
@@ -578,7 +578,7 @@
     });
   }
 
-  // ââ Now-playing bar on Home âââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Now-playing bar on Home ───────────────────────────────────────────────
   function updateNowPlayingBar() {
     var bar = $('now-playing-bar');
     var npName = $('np-name');
@@ -591,7 +591,7 @@
     }
   }
 
-  // ââ Library renderer ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Library renderer ──────────────────────────────────────────────────────
   function renderLibrary() {
     var container = $('lib-sections');
     if (!container) return;
@@ -615,7 +615,7 @@
       customRow.className = 'lib-row';
       for (var ci = 0; ci < customUrls.length; ci++) {
         (function (u) {
-          var label = u.length > 50 ? u.substring(0, 50) + 'â¦' : u;
+          var label = u.length > 50 ? u.substring(0, 50) + '…' : u;
           var btn = document.createElement('div');
           btn.className = 'lib-item focusable' + (loadedPlaylistUrl === u ? ' lib-loaded' : '');
           btn.setAttribute('tabindex', '-1');
@@ -657,7 +657,7 @@
     }, 60);
   }
 
-  // ââ Search renderer âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Search renderer ───────────────────────────────────────────────────────
   function renderSearchResults(query) {
     var container = $('search-results');
     if (!container) return;
@@ -682,7 +682,7 @@
     }
   }
 
-  // ââ Settings renderer ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Settings renderer ──────────────────────────────────────────────────────
   function renderSettings() {
     var themeRow = $('theme-row');
     if (themeRow) {
@@ -715,7 +715,7 @@
             var div = document.createElement('div');
             div.className = 'saved-item';
             div.innerHTML = '<span class="saved-url">' + esc(u) + '</span>' +
-              '<span class="saved-del focusable" tabindex="-1" data-delurl="' + esc(u) + '">â</span>';
+              '<span class="saved-del focusable" tabindex="-1" data-delurl="' + esc(u) + '">✕</span>';
             savedList.appendChild(div);
           })(allUrls[ci], ci);
         }
@@ -748,7 +748,7 @@
     renderLibrary();
   }
 
-  // ââ HTML escaping âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── HTML escaping ─────────────────────────────────────────────────────────
   function esc(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -757,7 +757,7 @@
       .replace(/"/g, '&quot;');
   }
 
-  // ââ Init ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Init ──────────────────────────────────────────────────────────────────
   document.getElementById('ver').textContent = VERSION;
   document.getElementById('sysinfo').textContent =
     'Screen: ' + window.innerWidth + 'x' + window.innerHeight + ' | ' + navigator.userAgent.substring(0, 80);
