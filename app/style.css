@@ -1,7 +1,7 @@
-/* HomeVision v0.2.0 — ES5/Flexbox, Chromium 53 */
+/* HomeVision v0.2.0 â ES5/Flexbox, Chromium 53 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── CSS variables (theme applied by JS) ── */
+/* ââ CSS variables (theme applied by JS) ââ */
 :root {
   --bg:      #0b0d14;
   --surface: #151826;
@@ -12,20 +12,20 @@
 }
 
 html, body {
-  width: 1920px; height: 1080px;
+  width: 100%; height: 100%;
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ── Layout ── */
+/* ââ Layout ââ */
 #app {
   display: -webkit-flex; display: flex;
-  width: 1920px; height: 1080px;
+  width: 100%; height: 100%;
 }
 
-/* ── Sidebar ── */
+/* ââ Sidebar ââ */
 #sidebar {
   width: 320px;
   padding: 50px 24px;
@@ -54,7 +54,7 @@ html, body {
 .menu-item.active  { background: var(--glow); color: var(--text); }
 .menu-item.focused { outline: 4px solid var(--accent); color: var(--text); }
 
-/* ── Content area ── */
+/* ââ Content area ââ */
 #content {
   -webkit-flex: 1; flex: 1;
   overflow: hidden;
@@ -72,7 +72,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .lead { font-size: 34px; color: var(--muted); margin-bottom: 40px; }
 .info { font-size: 28px; color: var(--muted); margin-bottom: 14px; }
 
-/* ── Home tiles ── */
+/* ââ Home tiles ââ */
 .tile-row {
   display: -webkit-flex; display: flex;
   margin-bottom: 50px;
@@ -112,7 +112,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 #np-name  { font-weight: bold; color: var(--accent); }
 #np-hint  { color: var(--muted); font-size: 26px; }
 
-/* ── Live TV screen ── */
+/* ââ Live TV screen ââ */
 #screen-live {
   display: -webkit-flex; display: flex;
   padding: 0;
@@ -120,16 +120,21 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 
 #player-wrap {
   position: relative;
-  width: 1240px;
-  height: 1080px;
+  -webkit-flex: 1; flex: 1;
+  height: 100%;
   background: #000;
-  -webkit-flex-shrink: 0; flex-shrink: 0;
+  overflow: hidden;
 }
 #hv-video {
   width: 100%; height: 100%;
   display: block;
   background: #000;
+  -o-object-fit: contain; object-fit: contain;
 }
+/* Aspect ratio modes */
+#hv-video.aspect-stretch { -o-object-fit: fill;    object-fit: fill;    }
+#hv-video.aspect-fit     { -o-object-fit: contain; object-fit: contain; }
+#hv-video.aspect-zoom    { -o-object-fit: cover;   object-fit: cover;   }
 #player-osd {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -153,7 +158,8 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 #player-error { color: #ff5c5c; }
 
 #ch-panel {
-  -webkit-flex: 1; flex: 1;
+  width: 380px;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
   display: -webkit-flex; display: flex;
   -webkit-flex-direction: column; flex-direction: column;
   background: var(--surface);
@@ -209,7 +215,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .ch-name  { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-group { font-size: 20px; color: var(--muted); margin-top: 2px; }
 
-/* ── Library screen ── */
+/* ââ Library screen ââ */
 #screen-library { overflow-y: auto; }
 #lib-sections { margin-top: 20px; }
 .lib-section-title {
@@ -247,7 +253,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   color: var(--accent);
 }
 
-/* ── Search screen ── */
+/* ââ Search screen ââ */
 .search-row { margin-bottom: 30px; }
 #search-input {
   width: 900px;
@@ -282,7 +288,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .sr-name  { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sr-group { font-size: 20px; color: var(--muted); margin-top: 4px; }
 
-/* ── Settings screen ── */
+/* ââ Settings screen ââ */
 #screen-settings { overflow-y: auto; }
 .setting-section { margin-bottom: 50px; }
 .setting-title {
@@ -349,3 +355,46 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   outline: none; padding: 4px 10px; border-radius: 6px;
 }
 .saved-del.focused { background: rgba(255,92,92,0.2); }
+
+/* ââ Player controls overlay ââ */
+#player-controls {
+  position: absolute;
+  bottom: 100px; right: 24px;
+  display: -webkit-flex; display: flex;
+  -webkit-align-items: flex-end; align-items: flex-end;
+  -webkit-justify-content: flex-end; justify-content: flex-end;
+  gap: 16px;
+  z-index: 20;
+}
+#ctrl-info {
+  -webkit-flex: 1; flex: 1;
+}
+#ctrl-name  { font-size: 36px; font-weight: bold; }
+#ctrl-group { font-size: 24px; color: var(--muted); margin-top: 4px; }
+#ctrl-buttons {
+  display: -webkit-flex; display: flex;
+  gap: 16px;
+}
+.ctrl-btn {
+  background: rgba(0,0,0,0.75);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 28px;
+  color: var(--text);
+  outline: none;
+  cursor: default;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.ctrl-btn.focused {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,0,0,0.9);
+}
+
+/* ââ Fullscreen video ââ */
+#player-wrap:-webkit-full-screen { width: 100vw; height: 100vh; }
+#player-wrap:fullscreen           { width: 100vw; height: 100vh; }
+#player-wrap:-webkit-full-screen #hv-video { width: 100%; height: 100%; }
+#player-wrap:fullscreen           #hv-video { width: 100%; height: 100%; }
