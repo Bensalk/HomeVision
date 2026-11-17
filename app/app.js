@@ -2,9 +2,9 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.2.0';
+  var VERSION = '0.2.1';
 
-  // ── Themes ──────────────────────────────────────────────────────────────
+  // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
     { name: 'Midnight', bg: '#0B0D14', surface: '#151826', accent: '#7C5CFF', glow: '#1A1440' },
     { name: 'AMOLED',   bg: '#000000', surface: '#111111', accent: '#FFFFFF', glow: '#000000' },
@@ -34,6 +34,10 @@
     { section: 'Indian Languages',     name: 'Punjabi',                url: BASE + 'languages/pan.m3u' },
     { section: 'Indian Languages',     name: 'Gujarati',               url: BASE + 'languages/guj.m3u' },
     { section: 'Indian Languages',     name: 'Urdu',                   url: BASE + 'languages/urd.m3u' },
+    { section: 'Indian Languages',     name: 'Odia',                   url: BASE + 'languages/ory.m3u' },
+    { section: 'Indian Languages',     name: 'Assamese',               url: BASE + 'languages/asm.m3u' },
+    { section: 'Indian Languages',     name: 'Sindhi',                 url: BASE + 'languages/snd.m3u' },
+    { section: 'Indian Languages',     name: 'Nepali',                 url: BASE + 'languages/nep.m3u' },
     { section: 'TV Shows & More',      name: 'Series',                 url: BASE + 'categories/series.m3u' },
     { section: 'TV Shows & More',      name: 'Animation',              url: BASE + 'categories/animation.m3u' },
     { section: 'TV Shows & More',      name: 'Family',                 url: BASE + 'categories/family.m3u' },
@@ -51,6 +55,12 @@
     { section: 'Categories',           name: 'Comedy',                 url: BASE + 'categories/comedy.m3u' },
     { section: 'Categories',           name: 'Religious',              url: BASE + 'categories/religious.m3u' },
     { section: 'Categories',           name: 'Education',              url: BASE + 'categories/education.m3u' },
+    { section: 'Categories',           name: 'Business',               url: BASE + 'categories/business.m3u' },
+    { section: 'Categories',           name: 'Science & Tech',         url: BASE + 'categories/science.m3u' },
+    { section: 'Categories',           name: 'Weather',                url: BASE + 'categories/weather.m3u' },
+    { section: 'Categories',           name: 'Auto',                   url: BASE + 'categories/auto.m3u' },
+    { section: 'Categories',           name: 'Shop',                   url: BASE + 'categories/shop.m3u' },
+    { section: 'Categories',           name: 'Outdoor',                url: BASE + 'categories/outdoor.m3u' },
     { section: 'International Languages', name: 'Arabic',              url: BASE + 'languages/ara.m3u' },
     { section: 'International Languages', name: 'Spanish',             url: BASE + 'languages/spa.m3u' },
     { section: 'International Languages', name: 'French',              url: BASE + 'languages/fra.m3u' },
