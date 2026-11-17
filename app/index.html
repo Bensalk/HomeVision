@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HomeVision</title>
+<meta name="viewport" content="width=1920, height=1080">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="logo">HomeVision</div>
+    <div class="menu-item focusable" data-screen="home" tabindex="-1">Home</div>
+    <div class="menu-item focusable" data-screen="live" tabindex="-1">Live TV</div>
+    <div class="menu-item focusable" data-screen="search" tabindex="-1">Search</div>
+    <div class="menu-item focusable" data-screen="settings" tabindex="-1">Settings</div>
+    <div class="menu-item focusable" data-screen="about" tabindex="-1">About</div>
+  </div>
+  <div id="content">
+    <div id="screen-home" class="screen">
+      <h1>Hello TV!</h1>
+      <p class="lead">HomeVision is installed and working.</p>
+      <div class="row">
+        <div class="card focusable" tabindex="-1" data-key="card1">Card 1</div>
+        <div class="card focusable" tabindex="-1" data-key="card2">Card 2</div>
+        <div class="card focusable" tabindex="-1" data-key="card3">Card 3</div>
+        <div class="card focusable" tabindex="-1" data-key="card4">Card 4</div>
+      </div>
+      <p class="hint">Use the arrow keys on your Magic Remote and press OK. Press any key to see its code below.</p>
+      <div id="keybox">Last key: (none yet)</div>
+    </div>
+    <div id="screen-live" class="screen hidden">
+      <h1>Live TV</h1>
+      <p class="lead">Coming in step 2: playlists and the player.</p>
+    </div>
+    <div id="screen-search" class="screen hidden">
+      <h1>Search</h1>
+      <p class="lead">Coming in step 3.</p>
+    </div>
+    <div id="screen-settings" class="screen hidden">
+      <h1>Settings</h1>
+      <p class="lead">Coming later.</p>
+    </div>
+    <div id="screen-about" class="screen hidden">
+      <h1>About</h1>
+      <p class="lead">HomeVision, version <span id="ver">0.1.0</span></p>
+      <p class="info">Created by Bensal</p>
+      <p class="info" id="sysinfo"></p>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
