@@ -8,47 +8,125 @@
 </head>
 <body>
 <div id="app">
+  <!-- SIDEBAR -->
   <div id="sidebar">
     <div id="logo">HomeVision</div>
     <div class="menu-item focusable" data-screen="home" tabindex="-1">Home</div>
     <div class="menu-item focusable" data-screen="live" tabindex="-1">Live TV</div>
+    <div class="menu-item focusable" data-screen="library" tabindex="-1">Library</div>
     <div class="menu-item focusable" data-screen="search" tabindex="-1">Search</div>
     <div class="menu-item focusable" data-screen="settings" tabindex="-1">Settings</div>
     <div class="menu-item focusable" data-screen="about" tabindex="-1">About</div>
   </div>
+
+  <!-- CONTENT -->
   <div id="content">
+
+    <!-- HOME -->
     <div id="screen-home" class="screen">
-      <h1>Hello TV!</h1>
-      <p class="lead">HomeVision is installed and working.</p>
-      <div class="row">
-        <div class="card focusable" tabindex="-1" data-key="card1">Card 1</div>
-        <div class="card focusable" tabindex="-1" data-key="card2">Card 2</div>
-        <div class="card focusable" tabindex="-1" data-key="card3">Card 3</div>
-        <div class="card focusable" tabindex="-1" data-key="card4">Card 4</div>
+      <h1>HomeVision</h1>
+      <p class="lead">Your personal TV hub. Use arrow keys or Magic Remote.</p>
+      <div class="tile-row">
+        <div class="tile focusable" tabindex="-1" data-goto="live">
+          <div class="tile-icon">▶</div>
+          <div class="tile-label">Live TV</div>
+        </div>
+        <div class="tile focusable" tabindex="-1" data-goto="library">
+          <div class="tile-icon">≡</div>
+          <div class="tile-label">Library</div>
+        </div>
+        <div class="tile focusable" tabindex="-1" data-goto="search">
+          <div class="tile-icon">⌕</div>
+          <div class="tile-label">Search</div>
+        </div>
+        <div class="tile focusable" tabindex="-1" data-goto="settings">
+          <div class="tile-icon">⚙</div>
+          <div class="tile-label">Settings</div>
+        </div>
       </div>
-      <p class="hint">Use the arrow keys on your Magic Remote and press OK. Press any key to see its code below.</p>
-      <div id="keybox">Last key: (none yet)</div>
+      <div id="now-playing-bar" class="hidden">
+        <span id="np-name"></span>
+        <span id="np-hint">Press OK to resume</span>
+      </div>
     </div>
+
+    <!-- LIVE TV -->
     <div id="screen-live" class="screen hidden">
-      <h1>Live TV</h1>
-      <p class="lead">Coming in step 2: playlists and the player.</p>
+      <!-- Player area -->
+      <div id="player-wrap">
+        <video id="hv-video" autoplay playsinline></video>
+        <div id="player-osd">
+          <div id="osd-name"></div>
+          <div id="osd-group"></div>
+          <div id="osd-status"></div>
+        </div>
+        <div id="player-spinner" class="hidden">Loading…</div>
+        <div id="player-error" class="hidden">Could not load stream</div>
+      </div>
+      <!-- Channel list panel -->
+      <div id="ch-panel">
+        <div id="ch-search-row">
+          <input id="ch-search" class="focusable" type="text" placeholder="Filter channels…" tabindex="-1">
+        </div>
+        <div id="ch-list"></div>
+        <div id="ch-empty" class="hidden">No channels loaded yet.<br>Go to Library to add a playlist.</div>
+      </div>
     </div>
+
+    <!-- LIBRARY -->
+    <div id="screen-library" class="screen hidden">
+      <h1>Library</h1>
+      <p class="lead" id="lib-status">Pick a playlist to load into Live TV.</p>
+      <div id="lib-sections"></div>
+    </div>
+
+    <!-- SEARCH -->
     <div id="screen-search" class="screen hidden">
       <h1>Search</h1>
-      <p class="lead">Coming in step 3.</p>
+      <div class="search-row">
+        <input id="search-input" class="focusable" type="text" placeholder="Type a channel name…" tabindex="-1">
+      </div>
+      <div id="search-results"></div>
     </div>
+
+    <!-- SETTINGS -->
     <div id="screen-settings" class="screen hidden">
       <h1>Settings</h1>
-      <p class="lead">Coming later.</p>
+
+      <div class="setting-section">
+        <div class="setting-title">Theme</div>
+        <div class="setting-row" id="theme-row"></div>
+      </div>
+
+      <div class="setting-section">
+        <div class="setting-title">Custom M3U / M3U8 Playlist URL</div>
+        <div class="setting-row">
+          <input id="custom-url" class="focusable" type="text" placeholder="https://example.com/playlist.m3u" tabindex="-1">
+          <button id="custom-add" class="btn focusable" tabindex="-1">Add</button>
+        </div>
+        <div id="custom-list"></div>
+      </div>
+
+      <div class="setting-section">
+        <div class="setting-title">Saved Playlists</div>
+        <div id="saved-list"></div>
+      </div>
     </div>
+
+    <!-- ABOUT -->
     <div id="screen-about" class="screen hidden">
       <h1>About</h1>
-      <p class="lead">HomeVision, version <span id="ver">0.1.0</span></p>
+      <p class="lead">HomeVision <span id="ver">0.2.0</span></p>
       <p class="info">Created by Bensal</p>
+      <p class="info">IPTV data: iptv-org community (iptv-org.github.io)</p>
       <p class="info" id="sysinfo"></p>
     </div>
-  </div>
-</div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- hls.js ES5 build (Chromium 53 compatible) loaded from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
