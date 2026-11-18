@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.13';
+  var VERSION = '0.4.15';
 
   // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
@@ -130,6 +130,8 @@
   var ASPECT_MODES = ['stretch', 'fit', 'zoom'];
   var ASPECT_LABELS = ['Stretch', 'Fit', 'Zoom'];
   var loadedPlaylistUrl = storageGet('hv_loaded_url', '');
+  var lastChannelData = null;
+  try { lastChannelData = JSON.parse(storageGet('hv_last_channel', 'null')); } catch(e) { lastChannelData = null; }
   var customUrls = [];
   var ctrlHideTimer = null;
   var idleFullscreenTimer = null;
@@ -160,7 +162,14 @@
   // ── Focus management ─────────────────────────────────────────────────────
   function visibleFocusables() {
     return all('.focusable').filter(function (el) {
-      return el.offsetWidth > 0 && el.offsetHeight > 0;
+      if (el.offsetWidth === 0 || el.offsetHeight === 0) return false;
+      // Also exclude elements whose ancestor screen is hidden
+      var node = el.parentNode;
+      while (node && node !== document.body) {
+        if (node.classList && node.classList.contains('hidden')) return false;
+        node = node.parentNode;
+      }
+      return true;
     });
   }
 
@@ -325,7 +334,9 @@
   }
 
   // ── Screen navigation ─────────────────────────────────────────────────────
-  function showScreen(name, skipHistory) {
+  // fromGoBack=true when called by goBack() — suppresses auto-focus resets in
+  // renderSettings/renderLibrary and prevents auto-play on the Live TV screen.
+  function showScreen(name, skipHistory, fromGoBack) {
     if (!skipHistory && currentScreen !== name) {
       screenHistory.push(currentScreen);
       if (screenHistory.length > 10) screenHistory.shift(); // cap stack
@@ -340,8 +351,6 @@
       m.classList.toggle('active', m.getAttribute('data-screen') === name);
     });
     // Push history state only on forward navigation so popstate fires on next back press.
-    // When skipHistory=true (goBack path) we do NOT push — that was creating extra entries
-    // that caused back to always land on Library instead of the correct previous screen.
     if (!skipHistory) {
       try { history.pushState({ screen: name }, ''); } catch(e) {}
     }
@@ -349,15 +358,37 @@
     if (name === 'live') {
       renderChannelList();
       var chSearch = $('ch-search');
-      if (channels.length > 0 && chSearch) {
+      // Always focus ch-search regardless of whether channels are loaded
+      if (chSearch) {
         setTimeout(function () { setFocus(chSearch); }, 60);
+      }
+      // Auto-restore last channel on forward navigation only (not goBack, not mid-play)
+      if (!fromGoBack && !currentChannel && lastChannelData && lastChannelData.url && channels.length > 0) {
+        var found = false;
+        for (var lci = 0; lci < channels.length; lci++) {
+          if (channels[lci].url === lastChannelData.url) { found = true; break; }
+        }
+        if (found) {
+          setTimeout(function () {
+            if (!currentChannel && lastChannelData) {
+              playUrl(lastChannelData.name, lastChannelData.group, lastChannelData.url);
+            }
+          }, 200);
+        }
       }
     } else if (name === 'library') {
       renderLibrary();
     } else if (name === 'settings') {
-      renderSettings();
+      renderSettings(fromGoBack); // suppress focus-reset when returning via goBack
     } else if (name === 'search') {
-      setTimeout(function () { var si = $('search-input'); if (si) setFocus(si); }, 60);
+      setTimeout(function () {
+        var si = $('search-input');
+        if (si) {
+          setFocus(si);
+          // If returning to search with an existing query, re-render results
+          if (fromGoBack && si.value) renderSearchResults(si.value);
+        }
+      }, 60);
     }
   }
 
@@ -398,21 +429,24 @@
     }
   }
 
+  // Returns true when goBack() navigated to a different screen (popstate re-seed needed),
+  // false when it only stopped playback or fullscreen (no screen change).
   function goBack() {
     // 1. Exit fullscreen first if active
     if (isFullscreen()) {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-      return;
+      return false; // no screen change
     }
-    // 2. If a channel is playing, stop it and return to channel list
+    // 2. If a channel is playing, stop it and return to channel panel
     if (currentChannel) {
       clearTimeout(idleFullscreenTimer);
       var video2 = $('hv-video');
       if (video2) { video2.pause(); video2.src = ''; }
       if (hlsPlayer) { try { hlsPlayer.destroy(); } catch(e) {} hlsPlayer = null; }
       currentChannel = null;
+      updateNowPlayingBar();
       var ctrl2 = $('player-controls');
       if (ctrl2) ctrl2.classList.add('hidden');
       var osdEl2 = $('player-osd');
@@ -422,24 +456,35 @@
       if (liveScreen2) liveScreen2.classList.remove('playing');
       var appEl2 = $('app');
       if (appEl2) appEl2.classList.remove('watching');
-      var chSearch2 = $('ch-search');
-      if (chSearch2) setTimeout(function () { setFocus(chSearch2); }, 60);
-      return;
+      // Focus the right element depending on which screen we're on (search vs live)
+      setTimeout(function () {
+        if (currentScreen === 'search') {
+          var si2 = $('search-input');
+          if (si2) setFocus(si2);
+        } else {
+          var chSearch2 = $('ch-search');
+          if (chSearch2) setFocus(chSearch2);
+        }
+      }, 60);
+      return false; // no screen change
     }
     // 3. Navigate back within the app — go to previous screen in history
     if (currentScreen !== 'home') {
       var prev = screenHistory.length > 0 ? screenHistory.pop() : 'home';
-      showScreen(prev, true); // true = don't push to stack again
-      setTimeout(function () {
-        var target = document.querySelector('.menu-item[data-screen="' + prev + '"]') ||
-                     document.querySelector('#screen-' + prev + ' .focusable');
-        if (target) setFocus(target);
-      }, 60);
-      return;
+      showScreen(prev, true, true); // skipHistory=true, fromGoBack=true
+      // Set fallback focus only for screens that don't set their own focus (home, about).
+      // live/search/library/settings all handle focus inside their own setup code.
+      if (prev === 'home' || prev === 'about') {
+        setTimeout(function () {
+          var target = document.querySelector('.menu-item[data-screen="' + prev + '"]') ||
+                       document.querySelector('#screen-' + prev + ' .focusable');
+          if (target) setFocus(target);
+        }, 80); // slightly after render (60ms) so we don't race with renderLibrary etc.
+      }
+      return true; // screen changed
     }
-    // 4. Already on home — do nothing (prevent app exit)
-    // On WebOS, pressing back on home could exit; keep user in app instead.
-    // Only allow platform back if user confirms (here we just do nothing).
+    // 4. Already on home — do nothing (prevent app exit on WebOS)
+    return false;
   }
 
   // ── Keyboard handler ──────────────────────────────────────────────────────
@@ -500,6 +545,23 @@
       }
     }
 
+    // Linear Up/Down navigation inside the channel list — more reliable than
+    // the spatial algorithm for a long scrolling list of items.
+    var isChItem = focusedEl && focusedEl.classList.contains('ch-item');
+    if (isChItem && (k === 38 || k === 40)) {
+      var chList2 = $('ch-list');
+      var chItems = chList2 ? Array.prototype.slice.call(chList2.querySelectorAll('.ch-item')) : [];
+      var ci3 = chItems.indexOf(focusedEl);
+      if (k === 38) { // Up — prev item, or back to ch-search at top
+        if (ci3 > 0) { setFocus(chItems[ci3 - 1]); }
+        else { var cs3 = $('ch-search'); if (cs3) setFocus(cs3); }
+      } else { // Down — next item (stop at bottom)
+        if (ci3 < chItems.length - 1) { setFocus(chItems[ci3 + 1]); }
+      }
+      e.preventDefault();
+      return;
+    }
+
     if (k === 37) {
       if (!isInput) { move('left'); e.preventDefault(); }
     } else if (k === 38) {
@@ -515,7 +577,11 @@
         else { move('down'); e.preventDefault(); }
       }
     } else if (k === 13) {
-      if (!isInput) {
+      if (isInput) {
+        // OK on a focused input — open virtual keyboard
+        activate();
+        e.preventDefault();
+      } else if (!isInput) {
         if (currentScreen === 'live' && currentChannel) {
           var ctrl = $('player-controls');
           var ctrlVisible = ctrl && !ctrl.classList.contains('hidden');
@@ -568,10 +634,16 @@
   // so no new entry is pushed), we re-seed ONE entry so the next back press
   // also fires popstate instead of exiting the app.
   window.addEventListener('popstate', function (e) {
-    goBack();
-    setTimeout(function () {
-      try { history.pushState({ screen: currentScreen }, ''); } catch(e) {}
-    }, 0);
+    var navigated = goBack();
+    // Re-seed a history entry ONLY when a screen change occurred so the next
+    // back press also fires popstate.  When goBack() merely stopped a channel
+    // the browser has already moved its pointer back past the 'playing' entry —
+    // adding another entry here would pile up and produce unexpected behaviour.
+    if (navigated) {
+      setTimeout(function () {
+        try { history.pushState({ screen: currentScreen }, ''); } catch(e) {}
+      }, 0);
+    }
   });
   // Seed two entries at startup: one bottom anchor + one for the first back press
   try {
@@ -761,6 +833,9 @@
 
   function playUrl(name, group, url) {
     currentChannel = { name: name, group: group, url: url };
+    // Persist last-watched channel so it can be restored on next visit to Live TV
+    lastChannelData = { name: name, group: group, url: url };
+    storageSet('hv_last_channel', JSON.stringify(lastChannelData));
     updateNowPlayingBar();
     var video = $('hv-video');
     var spinner = $('player-spinner');
@@ -971,7 +1046,9 @@
   }
 
   // ── Settings renderer ──────────────────────────────────────────────────────
-  function renderSettings() {
+  // suppressFocus=true when called from goBack() so we don't snap focus back
+  // to the first theme button when the user was somewhere deeper in settings.
+  function renderSettings(suppressFocus) {
     var themeRow = $('theme-row');
     if (themeRow) {
       themeRow.innerHTML = '';
@@ -1032,10 +1109,12 @@
         })(EXTRA_SOURCES[xi]);
       }
     }
-    setTimeout(function () {
-      var first = $('theme-row') ? $('theme-row').querySelector('.theme-btn') : null;
-      if (first) setFocus(first);
-    }, 60);
+    if (!suppressFocus) {
+      setTimeout(function () {
+        var first = $('theme-row') ? $('theme-row').querySelector('.theme-btn') : null;
+        if (first) setFocus(first);
+      }, 60);
+    }
   }
 
   function addCustomUrl() {

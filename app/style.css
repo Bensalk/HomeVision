@@ -107,9 +107,8 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   font-size: 32px;
   display: -webkit-flex; display: flex;
   -webkit-align-items: center; align-items: center;
-  gap: 24px;
 }
-#np-name  { font-weight: bold; color: var(--accent); }
+#np-name  { font-weight: bold; color: var(--accent); margin-right: 24px; }
 #np-hint  { color: var(--muted); font-size: 26px; }
 
 /* ââ Live TV screen ââ */
