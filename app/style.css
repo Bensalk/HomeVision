@@ -398,6 +398,59 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 }
 .saved-del.focused { background: rgba(255,92,92,0.2); }
 
+
+/* -- Extra Sources toggles ------------------------------------------------ */
+.setting-hint {
+  font-size: 24px;
+  color: var(--muted);
+  margin: 0 0 14px;
+  opacity: 0.7;
+}
+.extra-toggle-row {
+  display: -webkit-flex; display: flex;
+  -webkit-align-items: center; align-items: center;
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+}
+.extra-toggle-info {
+  -webkit-flex: 1; flex: 1;
+  margin-right: 20px;
+}
+.extra-toggle-name {
+  display: block;
+  font-size: 28px;
+  color: var(--text);
+}
+.extra-toggle-desc {
+  display: block;
+  font-size: 22px;
+  color: var(--muted);
+  opacity: 0.65;
+  margin-top: 4px;
+}
+.extra-toggle-btn {
+  min-width: 100px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 26px;
+  font-weight: bold;
+  background: var(--glow);
+  color: var(--muted);
+  border: 2px solid transparent;
+  cursor: default;
+  outline: none;
+}
+.extra-toggle-btn.extra-toggle-on {
+  background: var(--accent);
+  color: var(--bg);
+}
+.extra-toggle-btn.focused {
+  border-color: var(--accent);
+  -webkit-transform: scale(1.05);
+  transform: scale(1.05);
+}
 /* ââ Player controls overlay ââ */
 #player-controls {
   position: absolute;

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.0';
+  var VERSION = '0.4.12';
 
   // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
@@ -72,7 +72,6 @@
     { section: 'International Languages', name: 'Chinese',             url: BASE + 'languages/zho.m3u' },
     { section: 'International Languages', name: 'Japanese',            url: BASE + 'languages/jpn.m3u' },
     { section: 'International Languages', name: 'Korean',              url: BASE + 'languages/kor.m3u' },
-    { section: '⭐ Extra Sources',      name: 'Free-TV Global ⬡',       url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8' },
     { section: 'Countries',            name: 'United Arab Emirates',   url: BASE + 'countries/ae.m3u' },
     { section: 'Countries',            name: 'Qatar',                  url: BASE + 'countries/qa.m3u' },
     { section: 'Countries',            name: 'Saudi Arabia',           url: BASE + 'countries/sa.m3u' },
@@ -98,6 +97,12 @@
     { section: 'Countries',            name: 'Egypt',                  url: BASE + 'countries/eg.m3u' }
   ];
 
+  // ── Extra (non-iptv-org) sources — individually toggled in Settings ───────
+  var EXTRA_SOURCES = [
+    { id: 'freetv',  name: 'Free-TV Global',  url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
+      desc: 'Pluto TV, Plex, Samsung TV+, Roku, YouTube Live — free-to-air worldwide' }
+  ];
+
   // ── Storage helpers ──────────────────────────────────────────────────────
   function storageGet(key, def) {
     try { var v = localStorage.getItem(key); return v === null ? def : v; } catch(e) { return def; }
@@ -106,6 +111,9 @@
     try { localStorage.setItem(key, val); } catch(e) {}
   }
   function storageGetInt(key, def) { return parseInt(storageGet(key, def), 10) || def; }
+
+  function isExtraEnabled(id) { return storageGet('hv_extra_' + id, '0') === '1'; }
+  function setExtraEnabled(id, on) { storageSet('hv_extra_' + id, on ? '1' : '0'); }
 
   // ── State ────────────────────────────────────────────────────────────────
   var currentScreen = 'home';
@@ -370,6 +378,16 @@
     if (thIdx !== null) { applyTheme(parseInt(thIdx, 10)); renderSettings(); return; }
     var delIdx = focusedEl.getAttribute('data-delurl');
     if (delIdx !== null) { deleteCustomUrl(focusedEl.getAttribute('data-delurl')); return; }
+    var extraId = focusedEl.getAttribute('data-extraid');
+    if (extraId !== null) {
+      var newState = !isExtraEnabled(extraId);
+      setExtraEnabled(extraId, newState);
+      focusedEl.textContent = newState ? 'ON' : 'OFF';
+      if (newState) { focusedEl.classList.add('extra-toggle-on'); }
+      else { focusedEl.classList.remove('extra-toggle-on'); }
+      renderLibrary();
+      return;
+    }
     // For inputs: nothing (typing handled natively)
   }
 
@@ -856,6 +874,31 @@
       customSectionDiv.appendChild(customRow);
       container.appendChild(customSectionDiv);
     }
+    // Enabled extra sources section (shown before iptv-org, only when at least one is on)
+    var enabledExtras = EXTRA_SOURCES.filter(function (s) { return isExtraEnabled(s.id); });
+    if (enabledExtras.length > 0) {
+      var extraSecDiv = document.createElement('div');
+      var extraTitleDiv = document.createElement('div');
+      extraTitleDiv.className = 'lib-section-title';
+      extraTitleDiv.textContent = '⭐ Extra Sources';
+      extraSecDiv.appendChild(extraTitleDiv);
+      var extraRow = document.createElement('div');
+      extraRow.className = 'lib-row';
+      for (var ei = 0; ei < enabledExtras.length; ei++) {
+        (function (ex) {
+          var btn = document.createElement('div');
+          btn.className = 'lib-item lib-extra focusable' + (loadedPlaylistUrl === ex.url ? ' lib-loaded' : '');
+          btn.setAttribute('tabindex', '-1');
+          btn.setAttribute('data-liburl', ex.url);
+          btn.innerHTML = '<span class="lib-item-name">' + esc(ex.name) + '</span>' +
+                          '<span class="lib-item-note">Not from iptv-org</span>';
+          extraRow.appendChild(btn);
+        })(enabledExtras[ei]);
+      }
+      extraSecDiv.appendChild(extraRow);
+      container.appendChild(extraSecDiv);
+    }
+
     for (var si = 0; si < sections.length; si++) {
       var sName = sections[si];
       var secDiv = document.createElement('div');
@@ -869,15 +912,10 @@
       for (var ii = 0; ii < items.length; ii++) {
         (function (it) {
           var btn = document.createElement('div');
-          var isExtra = it.section.indexOf('Extra') !== -1;
-          btn.className = 'lib-item focusable' + (loadedPlaylistUrl === it.url ? ' lib-loaded' : '') + (isExtra ? ' lib-extra' : '');
+          btn.className = 'lib-item focusable' + (loadedPlaylistUrl === it.url ? ' lib-loaded' : '');
           btn.setAttribute('tabindex', '-1');
           btn.setAttribute('data-liburl', it.url);
-          if (isExtra) {
-            btn.innerHTML = '<span class="lib-item-name">' + esc(it.name) + '</span><span class="lib-item-note">Not from iptv-org</span>';
-          } else {
-            btn.textContent = it.name;
-          }
+          btn.textContent = it.name;
           rowDiv.appendChild(btn);
         })(items[ii]);
       }
@@ -953,6 +991,29 @@
             savedList.appendChild(div);
           })(allUrls[ci], ci);
         }
+      }
+    }
+    var extraList = $('extra-sources-list');
+    if (extraList) {
+      extraList.innerHTML = '';
+      for (var xi = 0; xi < EXTRA_SOURCES.length; xi++) {
+        (function (src) {
+          var on = isExtraEnabled(src.id);
+          var row = document.createElement('div');
+          row.className = 'extra-toggle-row';
+          var info = document.createElement('div');
+          info.className = 'extra-toggle-info';
+          info.innerHTML = '<span class="extra-toggle-name">' + esc(src.name) + '</span>' +
+                           '<span class="extra-toggle-desc">' + esc(src.desc) + '</span>';
+          var btn = document.createElement('button');
+          btn.className = 'extra-toggle-btn focusable' + (on ? ' extra-toggle-on' : '');
+          btn.setAttribute('tabindex', '-1');
+          btn.setAttribute('data-extraid', src.id);
+          btn.textContent = on ? 'ON' : 'OFF';
+          row.appendChild(info);
+          row.appendChild(btn);
+          extraList.appendChild(row);
+        })(EXTRA_SOURCES[xi]);
       }
     }
     setTimeout(function () {
