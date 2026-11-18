@@ -120,6 +120,7 @@
   var loadedPlaylistUrl = storageGet('hv_loaded_url', '');
   var customUrls = [];
   var ctrlHideTimer = null;
+  var idleFullscreenTimer = null;
   try { customUrls = JSON.parse(storageGet('hv_custom_urls', '[]')) || []; } catch(e) { customUrls = []; }
 
   var SCREENS = ['home', 'live', 'library', 'search', 'settings', 'about'];
@@ -156,8 +157,19 @@
     if (focusedEl) focusedEl.classList.remove('focused');
     focusedEl = el;
     el.classList.add('focused');
-    // scroll into view if inside a scroll container
-    if (el.scrollIntoView) {
+    // Manual scroll for ch-list (scrollIntoView unreliable in WebOS Chromium 53)
+    var chList = $('ch-list');
+    if (chList && chList.contains(el)) {
+      var elTop = el.offsetTop - chList.offsetTop;
+      var elBottom = elTop + el.offsetHeight;
+      var listScroll = chList.scrollTop;
+      var listHeight = chList.offsetHeight;
+      if (elTop < listScroll) {
+        chList.scrollTop = elTop - 8;
+      } else if (elBottom > listScroll + listHeight) {
+        chList.scrollTop = elBottom - listHeight + 8;
+      }
+    } else if (el.scrollIntoView) {
       try { el.scrollIntoView({ block: 'nearest' }); } catch(e) {}
     }
   }
@@ -195,9 +207,36 @@
     aspectMode = mode;
     storageSet('hv_aspect', mode);
     var video = $('hv-video');
-    if (!video) return;
-    video.classList.remove('aspect-stretch', 'aspect-fit', 'aspect-zoom');
-    video.classList.add('aspect-' + ASPECT_MODES[mode]);
+    var wrap  = $('player-wrap');
+    if (!video || !wrap) return;
+
+    var cw = wrap.offsetWidth  || 1920;
+    var ch = wrap.offsetHeight || 1080;
+    var vw = video.videoWidth  || 16;
+    var vh = video.videoHeight || 9;
+    var w, h, t, l;
+
+    if (mode === 0) {           // Stretch â fill the box completely
+      w = cw; h = ch; t = 0; l = 0;
+    } else if (mode === 1) {   // Fit â letterbox / pillarbox
+      var ratio = Math.min(cw / vw, ch / vh);
+      w = Math.round(vw * ratio);
+      h = Math.round(vh * ratio);
+      t = Math.round((ch - h) / 2);
+      l = Math.round((cw - w) / 2);
+    } else {                   // Zoom â fill and crop edges
+      var ratio2 = Math.max(cw / vw, ch / vh);
+      w = Math.round(vw * ratio2);
+      h = Math.round(vh * ratio2);
+      t = Math.round((ch - h) / 2);
+      l = Math.round((cw - w) / 2);
+    }
+
+    video.style.width  = w + 'px';
+    video.style.height = h + 'px';
+    video.style.top    = t + 'px';
+    video.style.left   = l + 'px';
+
     var lbl = $('ctrl-aspect-label');
     if (lbl) lbl.textContent = ASPECT_LABELS[mode];
   }
@@ -226,18 +265,30 @@
       else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
       else if (wrap.mozRequestFullScreen) wrap.mozRequestFullScreen();
       if (fsLabel) fsLabel.textContent = 'â Exit';
+      // Push history so back key exits fullscreen via popstate
+      try { history.pushState({ screen: 'live', playing: true, fullscreen: true }, ''); } catch(e) {}
     }
   }
 
   // Handle fullscreen change events
-  document.addEventListener('fullscreenchange', function () {
+  function onFsChange() {
     var fsLabel = $('ctrl-fs-label');
     if (fsLabel) fsLabel.textContent = isFullscreen() ? 'â Exit' : 'â¶ Full';
-  });
-  document.addEventListener('webkitfullscreenchange', function () {
-    var fsLabel = $('ctrl-fs-label');
-    if (fsLabel) fsLabel.textContent = isFullscreen() ? 'â Exit' : 'â¶ Full';
-  });
+    // Re-apply aspect ratio since container dimensions changed
+    setTimeout(function () { applyAspect(aspectMode); }, 100);
+  }
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+
+  // ââ Auto fullscreen when idle âââââââââââââââââââââââââââââââââââââââââââââ
+  function resetIdleFullscreenTimer() {
+    clearTimeout(idleFullscreenTimer);
+    if (currentChannel && !isFullscreen()) {
+      idleFullscreenTimer = setTimeout(function () {
+        if (currentChannel && !isFullscreen()) { toggleFullscreen(); }
+      }, 10000);
+    }
+  }
 
   // ââ Player controls overlay show/hide âââââââââââââââââââââââââââââââââââââ
   function showPlayerControls() {
@@ -256,11 +307,6 @@
     clearTimeout(ctrlHideTimer);
     ctrlHideTimer = setTimeout(function () {
       ctrl.classList.add('hidden');
-      // return focus to channel search if controls are hidden
-      if (focusedEl && (focusedEl.id === 'ctrl-aspect' || focusedEl.id === 'ctrl-fullscreen' || focusedEl.id === 'ctrl-exit')) {
-        var chSearch = $('ch-search');
-        if (chSearch) setFocus(chSearch);
-      }
     }, 5000);
   }
 
@@ -275,6 +321,8 @@
     all('.menu-item').forEach(function (m) {
       m.classList.toggle('active', m.getAttribute('data-screen') === name);
     });
+    // Push history state so webOS routes back key through popstate (not system menu)
+    try { history.pushState({ screen: name }, ''); } catch(e) {}
     // per-screen setup
     if (name === 'live') {
       renderChannelList();
@@ -323,12 +371,24 @@
       else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
       return;
     }
-    // 2. Hide player controls overlay if visible
-    var ctrl = $('player-controls');
-    if (ctrl && !ctrl.classList.contains('hidden')) {
-      ctrl.classList.add('hidden');
-      var chSearch = $('ch-search');
-      if (chSearch) setTimeout(function () { setFocus(chSearch); }, 60);
+    // 2. If a channel is playing, stop it and return to channel list
+    if (currentChannel) {
+      clearTimeout(idleFullscreenTimer);
+      var video2 = $('hv-video');
+      if (video2) { video2.pause(); video2.src = ''; }
+      if (hlsPlayer) { try { hlsPlayer.destroy(); } catch(e) {} hlsPlayer = null; }
+      currentChannel = null;
+      var ctrl2 = $('player-controls');
+      if (ctrl2) ctrl2.classList.add('hidden');
+      var osdEl2 = $('player-osd');
+      if (osdEl2) osdEl2.classList.add('osd-hidden');
+      // Show channel panel + sidebar again
+      var liveScreen2 = $('screen-live');
+      if (liveScreen2) liveScreen2.classList.remove('playing');
+      var appEl2 = $('app');
+      if (appEl2) appEl2.classList.remove('watching');
+      var chSearch2 = $('ch-search');
+      if (chSearch2) setTimeout(function () { setFocus(chSearch2); }, 60);
       return;
     }
     // 3. Navigate back within the app
@@ -343,40 +403,132 @@
   }
 
   // ââ Keyboard handler ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-  document.addEventListener('keydown', function (e) {
+  function handleKeyDown(e) {
     var k = e.keyCode;
     var isInput = focusedEl && (focusedEl.tagName === 'INPUT' || focusedEl.tagName === 'TEXTAREA');
     var isChSearch = focusedEl && focusedEl.id === 'ch-search';
+    // Reset idle-fullscreen timer on any key while watching
+    if (currentChannel) { resetIdleFullscreenTimer(); }
 
-    // Show player controls on any key when a channel is playing in live screen
-    if (currentScreen === 'live' && currentChannel) {
-      if (k !== 461 && k !== 8) showPlayerControls();
+    // Back button â handle first before anything else
+    // But let Backspace (k=8) work normally when user is typing in the search box
+    if (k === 461 || k === 8) {
+      if (k === 8 && isChSearch) {
+        return; // let the browser delete the character
+      }
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      goBack();
+      return false;
+    }
+
+    var isCtrlFocused = focusedEl && (
+      focusedEl.id === 'ctrl-aspect' ||
+      focusedEl.id === 'ctrl-fullscreen' ||
+      focusedEl.id === 'ctrl-exit'
+    );
+
+    // Arrow keys while watching a channel â show controls and navigate within them
+    if (currentScreen === 'live' && currentChannel && !isInput) {
+      if (k === 37 || k === 38 || k === 39 || k === 40) {
+        var ctrl0 = $('player-controls');
+        var ctrlVisible0 = ctrl0 && !ctrl0.classList.contains('hidden');
+        var btns = ['ctrl-fullscreen', 'ctrl-aspect', 'ctrl-exit'];
+        // Every arrow key resets the hide timer
+        showPlayerControls();
+        if (!ctrlVisible0) {
+          // Controls were hidden â focus exit button
+          setTimeout(function () {
+            var exitBtn0 = $('ctrl-exit');
+            if (exitBtn0) setFocus(exitBtn0);
+          }, 50);
+          e.preventDefault();
+          return;
+        } else if (isCtrlFocused) {
+          // On a ctrl button â navigate left/right between them
+          var ci = btns.indexOf(focusedEl.id);
+          if (k === 37 && ci > 0) { setFocus($(btns[ci - 1])); }
+          else if (k === 39 && ci < btns.length - 1) { setFocus($(btns[ci + 1])); }
+          e.preventDefault();
+          return;
+        } else {
+          // Controls visible, focus not on ctrl â move focus to exit button
+          var exitBtn1 = $('ctrl-exit');
+          if (exitBtn1) setFocus(exitBtn1);
+          e.preventDefault();
+          return;
+        }
+      }
     }
 
     if (k === 37) {
       if (!isInput) { move('left'); e.preventDefault(); }
     } else if (k === 38) {
       if (!isInput) { move('up'); e.preventDefault(); }
-      else if (isChSearch) {
-        // Up from channel search â sidebar menu
-        move('up'); e.preventDefault();
-      }
+      else if (isChSearch) { move('up'); e.preventDefault(); }
     } else if (k === 39) {
       if (!isInput) { move('right'); e.preventDefault(); }
     } else if (k === 40) {
       if (!isInput) { move('down'); e.preventDefault(); }
       else if (isChSearch) {
-        // Down from channel search â first channel item
         var firstCh = document.querySelector('#ch-list .ch-item');
         if (firstCh) { setFocus(firstCh); e.preventDefault(); }
         else { move('down'); e.preventDefault(); }
       }
     } else if (k === 13) {
-      if (!isInput) { activate(); e.preventDefault(); }
-    } else if (k === 461 || k === 8) {
-      goBack(); e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      if (!isInput) {
+        if (currentScreen === 'live' && currentChannel) {
+          var ctrl = $('player-controls');
+          var ctrlVisible = ctrl && !ctrl.classList.contains('hidden');
+          if (ctrlVisible && isCtrlFocused) {
+            activate();
+          } else if (!ctrlVisible) {
+            showPlayerControls();
+            var exitBtn = $('ctrl-exit');
+            if (exitBtn) setFocus(exitBtn);
+          } else {
+            activate();
+          }
+        } else {
+          activate();
+        }
+        e.preventDefault();
+      }
     }
-  }, true);
+  }
+
+  // Single capture-phase listener on window only (avoids double-firing)
+  window.addEventListener('keydown', handleKeyDown, true);
+
+  // ââ Magic Remote / mouse wheel scroll throttle on channel list âââââââââââââ
+  // LG Magic Remote fires many wheel events per gesture â cap to one focus-move
+  // per ~150ms so the list doesn't fly past every channel.
+  var wheelThrottleTimer = null;
+  var chListEl = $('ch-list');
+  if (chListEl) {
+    chListEl.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      if (wheelThrottleTimer) return;
+      wheelThrottleTimer = setTimeout(function() { wheelThrottleTimer = null; }, 150);
+      // Move focus one item up or down
+      var items = Array.prototype.slice.call(chListEl.querySelectorAll('.ch-item'));
+      if (!items.length) return;
+      var idx = focusedEl ? items.indexOf(focusedEl) : -1;
+      if (e.deltaY > 0) {
+        idx = idx < items.length - 1 ? idx + 1 : idx;
+      } else {
+        idx = idx > 0 ? idx - 1 : 0;
+      }
+      setFocus(items[idx]);
+    }, { passive: false });
+  }
+
+  // ââ WebOS back key via history API ââââââââââââââââââââââââââââââââââââââââ
+  // WebOS routes back button through popstate when history entries exist
+  window.addEventListener('popstate', function (e) {
+    goBack();
+  });
+  // Seed an initial history entry so popstate fires on first back press
+  try { history.replaceState({ screen: 'home' }, ''); } catch(e) {}
 
   // ââ Magic Remote hover & click ââââââââââââââââââââââââââââââââââââââââââââ
   document.addEventListener('mouseover', function (e) {
@@ -389,6 +541,13 @@
     }
   });
   document.addEventListener('click', function (e) {
+    // If watching a channel and clicking on player area, show controls
+    if (currentScreen === 'live' && currentChannel) {
+      var pw = $('player-wrap');
+      if (pw && pw.contains(e.target)) {
+        showPlayerControls();
+      }
+    }
     var el = e.target;
     while (el && el !== document.body) {
       if (el.classList && el.classList.contains('focusable')) {
@@ -427,7 +586,7 @@
     return out;
   }
 
-  // ââ XHR fetch âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ââ XHR fetch ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   function xhrGet(url, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -550,7 +709,15 @@
         osdEl.classList.add('osd-hidden');
       }, 4000);
     }
+    // Hide channel panel + sidebar â expand video to full width
+    var liveScreen = $('screen-live');
+    if (liveScreen) liveScreen.classList.add('playing');
+    var appEl = $('app');
+    if (appEl) appEl.classList.add('watching');
+    // Push history so webOS back key triggers popstate â goBack()
+    try { history.pushState({ screen: 'live', playing: true }, ''); } catch(e) {}
     showPlayerControls();
+    resetIdleFullscreenTimer();
     if (spinner) spinner.classList.remove('hidden');
     if (errEl) errEl.classList.add('hidden');
     // destroy previous hls
@@ -569,6 +736,7 @@
         if (spinner) spinner.classList.add('hidden');
         if (osdStatus) osdStatus.textContent = 'Live';
       });
+      video.addEventListener('loadedmetadata', function () { applyAspect(aspectMode); });
       hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
         if (data.fatal) {
           if (spinner) spinner.classList.add('hidden');
@@ -584,6 +752,7 @@
       video.oncanplay = function () {
         if (spinner) spinner.classList.add('hidden');
         if (osdStatus) osdStatus.textContent = 'Live';
+        applyAspect(aspectMode);
       };
       video.onerror = function () {
         if (spinner) spinner.classList.add('hidden');
