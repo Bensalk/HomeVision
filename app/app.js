@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.16';
+  var VERSION = '0.4.17';
 
   // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
@@ -205,6 +205,19 @@
   function move(dir) {
     var list = visibleFocusables();
     if (!focusedEl || list.indexOf(focusedEl) === -1) { setFocus(list[0]); return; }
+    // When focus is inside a content screen (not in the sidebar), restrict
+    // spatial navigation to that screen's focusables only. This prevents
+    // sidebar tiles from intercepting Up/Down navigation within settings,
+    // library, etc.
+    var sidebarEl = $('sidebar');
+    var focusInSidebar = sidebarEl && sidebarEl.contains(focusedEl);
+    if (!focusInSidebar && currentScreen !== 'home') {
+      var screenEl = $('screen-' + currentScreen);
+      if (screenEl) {
+        var screenList = list.filter(function(el) { return screenEl.contains(el); });
+        if (screenList.length > 0) { list = screenList; }
+      }
+    }
     var c = center(focusedEl);
     var best = null, bestScore = Infinity;
     for (var i = 0; i < list.length; i++) {
@@ -378,6 +391,15 @@
       }
     } else if (name === 'library') {
       renderLibrary();
+      if (!fromGoBack) {
+        setTimeout(function () {
+          var screenEl2 = $('screen-library');
+          if (screenEl2 && currentScreen === 'library') {
+            var first2 = screenEl2.querySelector('.focusable');
+            if (first2) setFocus(first2);
+          }
+        }, 150);
+      }
     } else if (name === 'settings') {
       renderSettings(fromGoBack); // suppress focus-reset when returning via goBack
     } else if (name === 'search') {
@@ -1118,7 +1140,7 @@
       setTimeout(function () {
         var first = $('theme-row') ? $('theme-row').querySelector('.theme-btn') : null;
         if (first) setFocus(first);
-      }, 60);
+      }, 150);
     }
   }
 
