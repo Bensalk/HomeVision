@@ -1,7 +1,7 @@
-/* HomeVision v0.2.0 â ES5/Flexbox, Chromium 53 */
+/* HomeVision v0.2.0 Ã¢ÂÂ ES5/Flexbox, Chromium 53 */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ââ CSS variables (theme applied by JS) ââ */
+/* Ã¢ÂÂÃ¢ÂÂ CSS variables (theme applied by JS) Ã¢ÂÂÃ¢ÂÂ */
 :root {
   --bg:      #0b0d14;
   --surface: #151826;
@@ -19,13 +19,13 @@ html, body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ââ Layout ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Layout Ã¢ÂÂÃ¢ÂÂ */
 #app {
   display: -webkit-flex; display: flex;
   width: 100%; height: 100%;
 }
 
-/* ââ Sidebar ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Sidebar Ã¢ÂÂÃ¢ÂÂ */
 #sidebar {
   width: 320px;
   padding: 50px 24px;
@@ -54,7 +54,7 @@ html, body {
 .menu-item.active  { background: var(--glow); color: var(--text); }
 .menu-item.focused { outline: 4px solid var(--accent); color: var(--text); }
 
-/* ââ Content area ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Content area Ã¢ÂÂÃ¢ÂÂ */
 #content {
   -webkit-flex: 1; flex: 1;
   overflow: hidden;
@@ -72,7 +72,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .lead { font-size: 34px; color: var(--muted); margin-bottom: 40px; }
 .info { font-size: 28px; color: var(--muted); margin-bottom: 14px; }
 
-/* ââ Home tiles ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Home tiles Ã¢ÂÂÃ¢ÂÂ */
 .tile-row {
   display: -webkit-flex; display: flex;
   margin-bottom: 50px;
@@ -112,7 +112,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 #np-name  { font-weight: bold; color: var(--accent); }
 #np-hint  { color: var(--muted); font-size: 26px; }
 
-/* ââ Live TV screen ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Live TV screen Ã¢ÂÂÃ¢ÂÂ */
 #screen-live {
   display: -webkit-flex; display: flex;
   padding: 0;
@@ -140,6 +140,11 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   bottom: 0; left: 0; right: 0;
   padding: 24px 32px;
   background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  transition: opacity 0.5s;
+}
+#player-osd.osd-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 #osd-name   { font-size: 42px; font-weight: bold; }
 #osd-group  { font-size: 28px; color: var(--muted); margin-top: 4px; }
@@ -215,7 +220,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .ch-name  { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-group { font-size: 20px; color: var(--muted); margin-top: 2px; }
 
-/* ââ Library screen ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Library screen Ã¢ÂÂÃ¢ÂÂ */
 #screen-library { overflow-y: auto; }
 #lib-sections { margin-top: 20px; }
 .lib-section-title {
@@ -253,7 +258,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   color: var(--accent);
 }
 
-/* ââ Search screen ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Search screen Ã¢ÂÂÃ¢ÂÂ */
 .search-row { margin-bottom: 30px; }
 #search-input {
   width: 900px;
@@ -288,7 +293,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .sr-name  { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sr-group { font-size: 20px; color: var(--muted); margin-top: 4px; }
 
-/* ââ Settings screen ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Settings screen Ã¢ÂÂÃ¢ÂÂ */
 #screen-settings { overflow-y: auto; }
 .setting-section { margin-bottom: 50px; }
 .setting-title {
@@ -356,7 +361,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 }
 .saved-del.focused { background: rgba(255,92,92,0.2); }
 
-/* ââ Player controls overlay ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Player controls overlay Ã¢ÂÂÃ¢ÂÂ */
 #player-controls {
   position: absolute;
   bottom: 100px; right: 24px;
@@ -393,7 +398,7 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   background: rgba(0,0,0,0.9);
 }
 
-/* ââ Fullscreen video ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Fullscreen video Ã¢ÂÂÃ¢ÂÂ */
 #player-wrap:-webkit-full-screen { width: 100vw; height: 100vh; }
 #player-wrap:fullscreen           { width: 100vw; height: 100vh; }
 #player-wrap:-webkit-full-screen #hv-video { width: 100%; height: 100%; }
