@@ -28,19 +28,19 @@
       <p class="lead">Your personal TV hub. Use arrow keys or Magic Remote.</p>
       <div class="tile-row">
         <div class="tile focusable" tabindex="-1" data-goto="live">
-          <div class="tile-icon">▶</div>
+          <div class="tile-icon">â¶</div>
           <div class="tile-label">Live TV</div>
         </div>
         <div class="tile focusable" tabindex="-1" data-goto="library">
-          <div class="tile-icon">≡</div>
+          <div class="tile-icon">â¡</div>
           <div class="tile-label">Library</div>
         </div>
         <div class="tile focusable" tabindex="-1" data-goto="search">
-          <div class="tile-icon">⌕</div>
+          <div class="tile-icon">â</div>
           <div class="tile-label">Search</div>
         </div>
         <div class="tile focusable" tabindex="-1" data-goto="settings">
-          <div class="tile-icon">⚙</div>
+          <div class="tile-icon">â</div>
           <div class="tile-label">Settings</div>
         </div>
       </div>
@@ -60,13 +60,24 @@
           <div id="osd-group"></div>
           <div id="osd-status"></div>
         </div>
-        <div id="player-spinner" class="hidden">Loading…</div>
+        <div id="player-controls" class="hidden">
+          <div id="ctrl-info">
+            <div id="ctrl-name"></div>
+            <div id="ctrl-group"></div>
+          </div>
+          <div id="ctrl-buttons">
+            <button id="ctrl-fullscreen" class="ctrl-btn focusable" tabindex="-1"><span id="ctrl-fs-label">â¶ Full</span></button>
+            <button id="ctrl-aspect" class="ctrl-btn focusable" tabindex="-1">â¬ Aspect</button>
+            <button id="ctrl-exit" class="ctrl-btn focusable" tabindex="-1">â Back</button>
+          </div>
+        </div>
+        <div id="player-spinner" class="hidden">Loadingâ¦</div>
         <div id="player-error" class="hidden">Could not load stream</div>
       </div>
       <!-- Channel list panel -->
       <div id="ch-panel">
         <div id="ch-search-row">
-          <input id="ch-search" class="focusable" type="text" placeholder="Filter channels…" tabindex="-1">
+          <input id="ch-search" class="focusable" type="text" placeholder="Filter channelsâ¦" tabindex="-1">
         </div>
         <div id="ch-list"></div>
         <div id="ch-empty" class="hidden">No channels loaded yet.<br>Go to Library to add a playlist.</div>
@@ -84,7 +95,7 @@
     <div id="screen-search" class="screen hidden">
       <h1>Search</h1>
       <div class="search-row">
-        <input id="search-input" class="focusable" type="text" placeholder="Type a channel name…" tabindex="-1">
+        <input id="search-input" class="focusable" type="text" placeholder="Type a channel nameâ¦" tabindex="-1">
       </div>
       <div id="search-results"></div>
     </div>
