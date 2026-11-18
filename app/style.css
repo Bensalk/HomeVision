@@ -68,6 +68,12 @@ html, body {
 }
 .hidden { display: none !important; }
 
+/* ── Universal focus ring ── white outline on every focused element ── */
+.focusable.focused {
+  -webkit-box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--accent);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--accent);
+}
+
 h1   { font-size: 60px; margin-bottom: 16px; }
 .lead { font-size: 34px; color: var(--muted); margin-bottom: 40px; }
 .info { font-size: 28px; color: var(--muted); margin-bottom: 14px; }
@@ -199,19 +205,21 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 }
 #ch-search.focused { border-color: var(--accent); }
 #ch-refresh {
-  background: var(--bg);
-  border: 2px solid var(--glow);
+  background: var(--accent);
+  border: 2px solid var(--accent);
   border-radius: 10px;
-  color: var(--text);
-  font-size: 28px;
-  padding: 10px 16px;
+  color: #fff;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 10px 20px;
   cursor: pointer;
   outline: none;
   -webkit-flex-shrink: 0; flex-shrink: 0;
   line-height: 1;
+  letter-spacing: 0.5px;
 }
-#ch-refresh.focused { border-color: var(--accent); }
-#ch-refresh.refreshing { color: var(--accent); }
+#ch-refresh.focused { border-color: #fff; }
+#ch-refresh.refreshing { opacity: 0.6; }
 
 #ch-list {
   -webkit-flex: 1; flex: 1;

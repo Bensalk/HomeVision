@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.17';
+  var VERSION = '0.4.18';
 
   // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
@@ -430,6 +430,7 @@
     var srUrl = focusedEl.getAttribute('data-srurl');
     if (srUrl !== null) { playUrl(focusedEl.getAttribute('data-srname'), focusedEl.getAttribute('data-srgroup'), srUrl); return; }
     if (focusedEl.id === 'custom-add') { addCustomUrl(); return; }
+    if (focusedEl.id === 'ch-refresh') { var chRef = $('ch-refresh'); if (chRef) chRef.click(); return; }
     if (focusedEl.id === 'ctrl-aspect') { cycleAspect(); return; }
     if (focusedEl.id === 'ctrl-fullscreen') { toggleFullscreen(); return; }
     if (focusedEl.id === 'ctrl-exit') { goBack(); return; }
@@ -824,7 +825,7 @@
       if (!loadedPlaylistUrl) return;
       chRefreshEl.classList.add('refreshing');
       var origText = chRefreshEl.textContent;
-      chRefreshEl.textContent = '…';
+      chRefreshEl.textContent = '↺ Loading…';
       var libStatus = $('lib-status');
       if (libStatus) libStatus.textContent = 'Refreshing playlist…';
       xhrGet(loadedPlaylistUrl, function (err, text) {
