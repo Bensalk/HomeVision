@@ -126,15 +126,10 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   overflow: hidden;
 }
 #hv-video {
-  width: 100%; height: 100%;
+  position: absolute;
   display: block;
   background: #000;
-  -o-object-fit: contain; object-fit: contain;
 }
-/* Aspect ratio modes */
-#hv-video.aspect-stretch { -o-object-fit: fill;    object-fit: fill;    }
-#hv-video.aspect-fit     { -o-object-fit: contain; object-fit: contain; }
-#hv-video.aspect-zoom    { -o-object-fit: cover;   object-fit: cover;   }
 #player-osd {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -169,6 +164,23 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   -webkit-flex-direction: column; flex-direction: column;
   background: var(--surface);
   overflow: hidden;
+  transition: width 0.3s ease, opacity 0.3s ease;
+}
+/* Hide sidebar while watching a channel */
+#app.watching #sidebar {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
+  transition: width 0.3s ease;
+}
+
+/* Hide channel panel while a channel is playing â full-screen video */
+#screen-live.playing #ch-panel {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 #ch-search-row {
   padding: 20px 20px 0;
@@ -401,5 +413,4 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 /* Ã¢ÂÂÃ¢ÂÂ Fullscreen video Ã¢ÂÂÃ¢ÂÂ */
 #player-wrap:-webkit-full-screen { width: 100vw; height: 100vh; }
 #player-wrap:fullscreen           { width: 100vw; height: 100vh; }
-#player-wrap:-webkit-full-screen #hv-video { width: 100%; height: 100%; }
-#player-wrap:fullscreen           #hv-video { width: 100%; height: 100%; }
+/* aspect ratio now handled via JS inline styles on #hv-video */
