@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.12';
+  var VERSION = '0.4.13';
 
   // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
@@ -100,7 +100,9 @@
   // ── Extra (non-iptv-org) sources — individually toggled in Settings ───────
   var EXTRA_SOURCES = [
     { id: 'freetv',  name: 'Free-TV Global',  url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
-      desc: 'Pluto TV, Plex, Samsung TV+, Roku, YouTube Live — free-to-air worldwide' }
+      desc: 'Pluto TV, Plex, Samsung TV+, Roku, YouTube Live — free-to-air worldwide' },
+    { id: 'indiantv', name: 'Indian TV', url: 'https://raw.githubusercontent.com/dark-N00B/IPtv/master/new_indian_tv.m3u',
+      desc: 'Doordarshan, news, regional & entertainment — community-maintained, not from iptv-org' }
   ];
 
   // ── Storage helpers ──────────────────────────────────────────────────────
@@ -167,10 +169,8 @@
     if (focusedEl) focusedEl.classList.remove('focused');
     focusedEl = el;
     el.classList.add('focused');
-    // Call native focus on inputs so WebOS shows the virtual keyboard
-    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      try { el.focus(); } catch(e) {}
-    }
+    // NOTE: el.focus() for inputs is called in activate() only (OK press),
+    // NOT here — so arrow-key navigation to an input does NOT auto-open keyboard
     // Manual scroll for ch-list (scrollIntoView unreliable in WebOS Chromium 53)
     var chList = $('ch-list');
     if (chList && chList.contains(el)) {
@@ -339,8 +339,12 @@
     all('.menu-item').forEach(function (m) {
       m.classList.toggle('active', m.getAttribute('data-screen') === name);
     });
-    // Push history state so webOS routes back key through popstate (not system menu)
-    try { history.pushState({ screen: name }, ''); } catch(e) {}
+    // Push history state only on forward navigation so popstate fires on next back press.
+    // When skipHistory=true (goBack path) we do NOT push — that was creating extra entries
+    // that caused back to always land on Library instead of the correct previous screen.
+    if (!skipHistory) {
+      try { history.pushState({ screen: name }, ''); } catch(e) {}
+    }
     // per-screen setup
     if (name === 'live') {
       renderChannelList();
@@ -388,7 +392,10 @@
       renderLibrary();
       return;
     }
-    // For inputs: nothing (typing handled natively)
+    // For inputs: OK press opens the virtual keyboard by calling native focus
+    if (focusedEl.tagName === 'INPUT' || focusedEl.tagName === 'TEXTAREA') {
+      try { focusedEl.focus(); } catch(e) {}
+    }
   }
 
   function goBack() {
@@ -446,8 +453,8 @@
     // Back button — handle first before anything else
     // But let Backspace (k=8) work normally when user is typing in the search box
     if (k === 461 || k === 8) {
-      if (k === 8 && isChSearch) {
-        return; // let the browser delete the character
+      if (k === 8 && isInput) {
+        return; // let the browser delete the character in any input field
       }
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       goBack();
@@ -556,12 +563,21 @@
   }
 
   // ── WebOS back key via history API ────────────────────────────────────────
-  // WebOS routes back button through popstate when history entries exist
+  // WebOS routes back button through popstate when history entries exist.
+  // After goBack() navigates to the previous screen (with skipHistory=true,
+  // so no new entry is pushed), we re-seed ONE entry so the next back press
+  // also fires popstate instead of exiting the app.
   window.addEventListener('popstate', function (e) {
     goBack();
+    setTimeout(function () {
+      try { history.pushState({ screen: currentScreen }, ''); } catch(e) {}
+    }, 0);
   });
-  // Seed an initial history entry so popstate fires on first back press
-  try { history.replaceState({ screen: 'home' }, ''); } catch(e) {}
+  // Seed two entries at startup: one bottom anchor + one for the first back press
+  try {
+    history.replaceState({ screen: 'home' }, '');
+    history.pushState({ screen: 'home' }, '');
+  } catch(e) {}
 
   // ── Magic Remote hover & click ────────────────────────────────────────────
   document.addEventListener('mouseover', function (e) {
