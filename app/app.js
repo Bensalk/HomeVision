@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.4.15';
+  var VERSION = '0.4.16';
 
   // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
@@ -399,6 +399,8 @@
     if (sc) { showScreen(sc); return; }
     var gt = focusedEl.getAttribute('data-goto');
     if (gt) { showScreen(gt); return; }
+    var act = focusedEl.getAttribute('data-action');
+    if (act === 'exit') { try { window.close(); } catch(e2) {} return; }
     var libUrl = focusedEl.getAttribute('data-liburl');
     if (libUrl) { loadPlaylist(libUrl, focusedEl.textContent); return; }
     var chUrl = focusedEl.getAttribute('data-churl');
@@ -492,6 +494,7 @@
     var k = e.keyCode;
     var isInput = focusedEl && (focusedEl.tagName === 'INPUT' || focusedEl.tagName === 'TEXTAREA');
     var isChSearch = focusedEl && focusedEl.id === 'ch-search';
+    var isCustomUrl = focusedEl && focusedEl.id === 'custom-url';
     // Reset idle-fullscreen timer on any key while watching
     if (currentChannel) { resetIdleFullscreenTimer(); }
 
@@ -567,10 +570,12 @@
     } else if (k === 38) {
       if (!isInput) { move('up'); e.preventDefault(); }
       else if (isChSearch) { move('up'); e.preventDefault(); }
+      else if (isCustomUrl) { move('up'); e.preventDefault(); }
     } else if (k === 39) {
       if (!isInput) { move('right'); e.preventDefault(); }
     } else if (k === 40) {
       if (!isInput) { move('down'); e.preventDefault(); }
+      else if (isCustomUrl) { move('down'); e.preventDefault(); }
       else if (isChSearch) {
         var firstCh = document.querySelector('#ch-list .ch-item');
         if (firstCh) { setFocus(firstCh); e.preventDefault(); }
