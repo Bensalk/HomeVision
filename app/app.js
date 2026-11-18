@@ -1,10 +1,10 @@
-// HomeVision v0.2.0 â ES5 IIFE â Chromium 53 / webOS 4.x compatible
+// HomeVision v0.2.0 — ES5 IIFE — Chromium 53 / webOS 4.x compatible
 (function () {
   'use strict';
 
   var VERSION = '0.4.0';
 
-  // ââ Themes âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Themes ─────────────────────────────────────────────────────────────
   var THEMES = [
     { name: 'Midnight', bg: '#0B0D14', surface: '#151826', accent: '#7C5CFF', glow: '#1A1440' },
     { name: 'AMOLED',   bg: '#000000', surface: '#111111', accent: '#FFFFFF', glow: '#000000' },
@@ -18,7 +18,7 @@
     { name: 'Slate',    bg: '#0E1116', surface: '#1A1F27', accent: '#9AA7B8', glow: '#232A35' }
   ];
 
-  // ââ IPTV-org library (same as PadVision) ââââââââââââââââââââââââââââââââ
+  // ── IPTV-org library (same as PadVision) ────────────────────────────────
   var BASE = 'https://iptv-org.github.io/iptv/';
   var LIBRARY = [
     { section: 'Popular',              name: 'India',                  url: BASE + 'countries/in.m3u' },
@@ -97,7 +97,7 @@
     { section: 'Countries',            name: 'Egypt',                  url: BASE + 'countries/eg.m3u' }
   ];
 
-  // ââ Storage helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Storage helpers ──────────────────────────────────────────────────────
   function storageGet(key, def) {
     try { var v = localStorage.getItem(key); return v === null ? def : v; } catch(e) { return def; }
   }
@@ -106,7 +106,7 @@
   }
   function storageGetInt(key, def) { return parseInt(storageGet(key, def), 10) || def; }
 
-  // ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── State ────────────────────────────────────────────────────────────────
   var currentScreen = 'home';
   var focusedEl = null;
   var channels = [];           // currently loaded channel list
@@ -125,11 +125,11 @@
 
   var SCREENS = ['home', 'live', 'library', 'search', 'settings', 'about'];
 
-  // ââ DOM helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── DOM helpers ──────────────────────────────────────────────────────────
   function $(id) { return document.getElementById(id); }
   function all(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
 
-  // ââ Theme ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Theme ────────────────────────────────────────────────────────────────
   function applyTheme(idx) {
     themeIndex = idx;
     storageSet('hv_theme', idx);
@@ -145,7 +145,7 @@
     document.body.style.background = t.bg;
   }
 
-  // ââ Focus management âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Focus management ─────────────────────────────────────────────────────
   function visibleFocusables() {
     return all('.focusable').filter(function (el) {
       return el.offsetWidth > 0 && el.offsetHeight > 0;
@@ -202,7 +202,7 @@
     if (best) setFocus(best);
   }
 
-  // ââ Aspect ratio âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Aspect ratio ─────────────────────────────────────────────────────────
   function applyAspect(mode) {
     aspectMode = mode;
     storageSet('hv_aspect', mode);
@@ -216,15 +216,15 @@
     var vh = video.videoHeight || 9;
     var w, h, t, l;
 
-    if (mode === 0) {           // Stretch â fill the box completely
+    if (mode === 0) {           // Stretch — fill the box completely
       w = cw; h = ch; t = 0; l = 0;
-    } else if (mode === 1) {   // Fit â letterbox / pillarbox
+    } else if (mode === 1) {   // Fit — letterbox / pillarbox
       var ratio = Math.min(cw / vw, ch / vh);
       w = Math.round(vw * ratio);
       h = Math.round(vh * ratio);
       t = Math.round((ch - h) / 2);
       l = Math.round((cw - w) / 2);
-    } else {                   // Zoom â fill and crop edges
+    } else {                   // Zoom — fill and crop edges
       var ratio2 = Math.max(cw / vw, ch / vh);
       w = Math.round(vw * ratio2);
       h = Math.round(vh * ratio2);
@@ -245,7 +245,7 @@
     applyAspect((aspectMode + 1) % ASPECT_MODES.length);
   }
 
-  // ââ Fullscreen ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Fullscreen ────────────────────────────────────────────────────────────
   function isFullscreen() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement ||
               document.mozFullScreenElement);
@@ -259,12 +259,12 @@
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-      if (fsLabel) fsLabel.textContent = 'â¶ Full';
+      if (fsLabel) fsLabel.textContent = '⛶ Full';
     } else {
       if (wrap.requestFullscreen) wrap.requestFullscreen();
       else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
       else if (wrap.mozRequestFullScreen) wrap.mozRequestFullScreen();
-      if (fsLabel) fsLabel.textContent = 'â Exit';
+      if (fsLabel) fsLabel.textContent = '✕ Exit';
       // Push history so back key exits fullscreen via popstate
       try { history.pushState({ screen: 'live', playing: true, fullscreen: true }, ''); } catch(e) {}
     }
@@ -273,14 +273,14 @@
   // Handle fullscreen change events
   function onFsChange() {
     var fsLabel = $('ctrl-fs-label');
-    if (fsLabel) fsLabel.textContent = isFullscreen() ? 'â Exit' : 'â¶ Full';
+    if (fsLabel) fsLabel.textContent = isFullscreen() ? '✕ Exit' : '⛶ Full';
     // Re-apply aspect ratio since container dimensions changed
     setTimeout(function () { applyAspect(aspectMode); }, 100);
   }
   document.addEventListener('fullscreenchange', onFsChange);
   document.addEventListener('webkitfullscreenchange', onFsChange);
 
-  // ââ Auto fullscreen when idle âââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Auto fullscreen when idle ─────────────────────────────────────────────
   function resetIdleFullscreenTimer() {
     clearTimeout(idleFullscreenTimer);
     if (currentChannel && !isFullscreen()) {
@@ -290,7 +290,7 @@
     }
   }
 
-  // ââ Player controls overlay show/hide âââââââââââââââââââââââââââââââââââââ
+  // ── Player controls overlay show/hide ─────────────────────────────────────
   function showPlayerControls() {
     var ctrl = $('player-controls');
     if (!ctrl) return;
@@ -310,7 +310,7 @@
     }, 5000);
   }
 
-  // ââ Screen navigation âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Screen navigation ─────────────────────────────────────────────────────
   function showScreen(name) {
     currentScreen = name;
     for (var i = 0; i < SCREENS.length; i++) {
@@ -339,7 +339,7 @@
     }
   }
 
-  // ââ Activate (OK press or click) âââââââââââââââââââââââââââââââââââââââââ
+  // ── Activate (OK press or click) ─────────────────────────────────────────
   function activate() {
     if (!focusedEl) return;
     var sc = focusedEl.getAttribute('data-screen');
@@ -397,12 +397,12 @@
       setTimeout(function () { setFocus(document.querySelector('.menu-item[data-screen="home"]')); }, 60);
       return;
     }
-    // 4. Already on home â do nothing (prevent app exit)
+    // 4. Already on home — do nothing (prevent app exit)
     // On WebOS, pressing back on home could exit; keep user in app instead.
     // Only allow platform back if user confirms (here we just do nothing).
   }
 
-  // ââ Keyboard handler ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Keyboard handler ──────────────────────────────────────────────────────
   function handleKeyDown(e) {
     var k = e.keyCode;
     var isInput = focusedEl && (focusedEl.tagName === 'INPUT' || focusedEl.tagName === 'TEXTAREA');
@@ -410,7 +410,7 @@
     // Reset idle-fullscreen timer on any key while watching
     if (currentChannel) { resetIdleFullscreenTimer(); }
 
-    // Back button â handle first before anything else
+    // Back button — handle first before anything else
     // But let Backspace (k=8) work normally when user is typing in the search box
     if (k === 461 || k === 8) {
       if (k === 8 && isChSearch) {
@@ -427,7 +427,7 @@
       focusedEl.id === 'ctrl-exit'
     );
 
-    // Arrow keys while watching a channel â show controls and navigate within them
+    // Arrow keys while watching a channel — show controls and navigate within them
     if (currentScreen === 'live' && currentChannel && !isInput) {
       if (k === 37 || k === 38 || k === 39 || k === 40) {
         var ctrl0 = $('player-controls');
@@ -436,7 +436,7 @@
         // Every arrow key resets the hide timer
         showPlayerControls();
         if (!ctrlVisible0) {
-          // Controls were hidden â focus exit button
+          // Controls were hidden — focus exit button
           setTimeout(function () {
             var exitBtn0 = $('ctrl-exit');
             if (exitBtn0) setFocus(exitBtn0);
@@ -444,14 +444,14 @@
           e.preventDefault();
           return;
         } else if (isCtrlFocused) {
-          // On a ctrl button â navigate left/right between them
+          // On a ctrl button — navigate left/right between them
           var ci = btns.indexOf(focusedEl.id);
           if (k === 37 && ci > 0) { setFocus($(btns[ci - 1])); }
           else if (k === 39 && ci < btns.length - 1) { setFocus($(btns[ci + 1])); }
           e.preventDefault();
           return;
         } else {
-          // Controls visible, focus not on ctrl â move focus to exit button
+          // Controls visible, focus not on ctrl — move focus to exit button
           var exitBtn1 = $('ctrl-exit');
           if (exitBtn1) setFocus(exitBtn1);
           e.preventDefault();
@@ -499,8 +499,8 @@
   // Single capture-phase listener on window only (avoids double-firing)
   window.addEventListener('keydown', handleKeyDown, true);
 
-  // ââ Magic Remote / mouse wheel scroll throttle on channel list âââââââââââââ
-  // LG Magic Remote fires many wheel events per gesture â cap to one focus-move
+  // ── Magic Remote / mouse wheel scroll throttle on channel list ─────────────
+  // LG Magic Remote fires many wheel events per gesture — cap to one focus-move
   // per ~150ms so the list doesn't fly past every channel.
   var wheelThrottleTimer = null;
   var chListEl = $('ch-list');
@@ -522,7 +522,7 @@
     }, { passive: false });
   }
 
-  // ââ WebOS back key via history API ââââââââââââââââââââââââââââââââââââââââ
+  // ── WebOS back key via history API ────────────────────────────────────────
   // WebOS routes back button through popstate when history entries exist
   window.addEventListener('popstate', function (e) {
     goBack();
@@ -530,7 +530,7 @@
   // Seed an initial history entry so popstate fires on first back press
   try { history.replaceState({ screen: 'home' }, ''); } catch(e) {}
 
-  // ââ Magic Remote hover & click ââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Magic Remote hover & click ────────────────────────────────────────────
   document.addEventListener('mouseover', function (e) {
     var el = e.target;
     while (el && el !== document.body) {
@@ -557,7 +557,7 @@
     }
   });
 
-  // ââ M3U parser âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── M3U parser ───────────────────────────────────────────────────────────
   function parseM3u(text) {
     var out = [];
     var name = '', group = 'Other', logo = null;
@@ -586,7 +586,7 @@
     return out;
   }
 
-  // ââ XHR fetch ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── XHR fetch ────────────────────────────────────────────────────────────
   function xhrGet(url, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -603,10 +603,10 @@
     xhr.send();
   }
 
-  // ââ Load playlist âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Load playlist ─────────────────────────────────────────────────────────
   function loadPlaylist(url, label) {
     var libStatus = $('lib-status');
-    if (libStatus) libStatus.textContent = 'Loading ' + (label || url) + 'â¦';
+    if (libStatus) libStatus.textContent = 'Loading ' + (label || url) + '…';
     xhrGet(url, function (err, text) {
       if (err) {
         if (libStatus) libStatus.textContent = 'Failed to load: ' + err;
@@ -628,7 +628,7 @@
     });
   }
 
-  // ââ Channel list renderer âââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Channel list renderer ─────────────────────────────────────────────────
   function renderChannelList() {
     var list = $('ch-list');
     var empty = $('ch-empty');
@@ -658,7 +658,7 @@
     }
   }
 
-  // ââ Channel search input ââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Channel search input ──────────────────────────────────────────────────
   var chSearchTimer = null;
   var chSearchEl = $('ch-search');
   if (chSearchEl) {
@@ -669,6 +669,32 @@
     chSearchEl.addEventListener('focus', function () { setFocus(chSearchEl); });
   }
 
+  // ── Refresh button ────────────────────────────────────────────────────────
+  var chRefreshEl = $('ch-refresh');
+  if (chRefreshEl) {
+    chRefreshEl.addEventListener('click', function () {
+      if (!loadedPlaylistUrl) return;
+      chRefreshEl.classList.add('refreshing');
+      var origText = chRefreshEl.textContent;
+      chRefreshEl.textContent = '…';
+      var libStatus = $('lib-status');
+      if (libStatus) libStatus.textContent = 'Refreshing playlist…';
+      xhrGet(loadedPlaylistUrl, function (err, text) {
+        chRefreshEl.classList.remove('refreshing');
+        chRefreshEl.textContent = origText;
+        if (err) {
+          if (libStatus) libStatus.textContent = 'Refresh failed: ' + err;
+          return;
+        }
+        channels = parseM3u(text);
+        filteredChannels = channels.slice();
+        if (libStatus) libStatus.textContent = 'Refreshed: ' + channels.length + ' channels';
+        renderChannelList();
+      });
+    });
+    chRefreshEl.addEventListener('focus', function () { setFocus(chRefreshEl); });
+  }
+
   var searchInputEl = $('search-input');
   if (searchInputEl) {
     searchInputEl.addEventListener('input', function () {
@@ -677,7 +703,7 @@
     searchInputEl.addEventListener('focus', function () { setFocus(searchInputEl); });
   }
 
-  // ââ Play channel by index in filteredChannels âââââââââââââââââââââââââââââ
+  // ── Play channel by index in filteredChannels ─────────────────────────────
   function playChannel(idx) {
     var c = filteredChannels[idx];
     if (!c) return;
@@ -709,12 +735,12 @@
         osdEl.classList.add('osd-hidden');
       }, 4000);
     }
-    // Hide channel panel + sidebar â expand video to full width
+    // Hide channel panel + sidebar — expand video to full width
     var liveScreen = $('screen-live');
     if (liveScreen) liveScreen.classList.add('playing');
     var appEl = $('app');
     if (appEl) appEl.classList.add('watching');
-    // Push history so webOS back key triggers popstate â goBack()
+    // Push history so webOS back key triggers popstate → goBack()
     try { history.pushState({ screen: 'live', playing: true }, ''); } catch(e) {}
     showPlayerControls();
     resetIdleFullscreenTimer();
@@ -766,7 +792,7 @@
     });
   }
 
-  // ââ Now-playing bar on Home âââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Now-playing bar on Home ───────────────────────────────────────────────
   function updateNowPlayingBar() {
     var bar = $('now-playing-bar');
     var npName = $('np-name');
@@ -779,7 +805,7 @@
     }
   }
 
-  // ââ Library renderer ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Library renderer ──────────────────────────────────────────────────────
   function renderLibrary() {
     var container = $('lib-sections');
     if (!container) return;
@@ -803,7 +829,7 @@
       customRow.className = 'lib-row';
       for (var ci = 0; ci < customUrls.length; ci++) {
         (function (u) {
-          var label = u.length > 50 ? u.substring(0, 50) + 'â¦' : u;
+          var label = u.length > 50 ? u.substring(0, 50) + '…' : u;
           var btn = document.createElement('div');
           btn.className = 'lib-item focusable' + (loadedPlaylistUrl === u ? ' lib-loaded' : '');
           btn.setAttribute('tabindex', '-1');
@@ -845,7 +871,7 @@
     }, 60);
   }
 
-  // ââ Search renderer âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Search renderer ───────────────────────────────────────────────────────
   function renderSearchResults(query) {
     var container = $('search-results');
     if (!container) return;
@@ -870,7 +896,7 @@
     }
   }
 
-  // ââ Settings renderer ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Settings renderer ──────────────────────────────────────────────────────
   function renderSettings() {
     var themeRow = $('theme-row');
     if (themeRow) {
@@ -903,7 +929,7 @@
             var div = document.createElement('div');
             div.className = 'saved-item';
             div.innerHTML = '<span class="saved-url">' + esc(u) + '</span>' +
-              '<span class="saved-del focusable" tabindex="-1" data-delurl="' + esc(u) + '">â</span>';
+              '<span class="saved-del focusable" tabindex="-1" data-delurl="' + esc(u) + '">✕</span>';
             savedList.appendChild(div);
           })(allUrls[ci], ci);
         }
@@ -936,7 +962,7 @@
     renderLibrary();
   }
 
-  // ââ HTML escaping âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── HTML escaping ─────────────────────────────────────────────────────────
   function esc(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -945,7 +971,7 @@
       .replace(/"/g, '&quot;');
   }
 
-  // ââ Init ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Init ──────────────────────────────────────────────────────────────────
   document.getElementById('ver').textContent = VERSION;
   document.getElementById('sysinfo').textContent =
     'Screen: ' + window.innerWidth + 'x' + window.innerHeight + ' | ' + navigator.userAgent.substring(0, 80);

@@ -1,13 +1,15 @@
 {
   "id": "com.bensal.homevision",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "vendor": "Bensal",
   "type": "web",
   "main": "index.html",
   "title": "HomeVision",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
+  "iconColor": "#0b1020",
   "bgColor": "#0b1020",
+  "splashBackground": "splashBackground.png",
   "resolution": "1920x1080",
   "requiredACG": []
 }
