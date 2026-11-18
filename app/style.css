@@ -186,10 +186,10 @@ h1   { font-size: 60px; margin-bottom: 16px; }
   padding: 20px 20px 0;
   display: -webkit-flex; display: flex;
   -webkit-align-items: center; align-items: center;
-  gap: 10px;
 }
 #ch-search {
   -webkit-flex: 1; flex: 1;
+  margin-right: 10px;
   background: var(--bg);
   border: 2px solid var(--glow);
   border-radius: 10px;
@@ -285,6 +285,14 @@ h1   { font-size: 60px; margin-bottom: 16px; }
 .lib-item.lib-loaded {
   border-color: var(--accent);
   color: var(--accent);
+}
+.lib-extra { border-color: var(--glow); }
+.lib-item-name { display: block; }
+.lib-item-note {
+  display: block;
+  font-size: 20px;
+  opacity: 0.55;
+  margin-top: 4px;
 }
 
 /* ââ Search screen ââ */

@@ -72,6 +72,7 @@
     { section: 'International Languages', name: 'Chinese',             url: BASE + 'languages/zho.m3u' },
     { section: 'International Languages', name: 'Japanese',            url: BASE + 'languages/jpn.m3u' },
     { section: 'International Languages', name: 'Korean',              url: BASE + 'languages/kor.m3u' },
+    { section: '⭐ Extra Sources',      name: 'Free-TV Global ⬡',       url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8' },
     { section: 'Countries',            name: 'United Arab Emirates',   url: BASE + 'countries/ae.m3u' },
     { section: 'Countries',            name: 'Qatar',                  url: BASE + 'countries/qa.m3u' },
     { section: 'Countries',            name: 'Saudi Arabia',           url: BASE + 'countries/sa.m3u' },
@@ -108,6 +109,7 @@
 
   // ── State ────────────────────────────────────────────────────────────────
   var currentScreen = 'home';
+  var screenHistory = [];  // stack of previous screens for back navigation
   var focusedEl = null;
   var channels = [];           // currently loaded channel list
   var filteredChannels = [];   // after search filter
@@ -157,6 +159,10 @@
     if (focusedEl) focusedEl.classList.remove('focused');
     focusedEl = el;
     el.classList.add('focused');
+    // Call native focus on inputs so WebOS shows the virtual keyboard
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      try { el.focus(); } catch(e) {}
+    }
     // Manual scroll for ch-list (scrollIntoView unreliable in WebOS Chromium 53)
     var chList = $('ch-list');
     if (chList && chList.contains(el)) {
@@ -311,7 +317,11 @@
   }
 
   // ── Screen navigation ─────────────────────────────────────────────────────
-  function showScreen(name) {
+  function showScreen(name, skipHistory) {
+    if (!skipHistory && currentScreen !== name) {
+      screenHistory.push(currentScreen);
+      if (screenHistory.length > 10) screenHistory.shift(); // cap stack
+    }
     currentScreen = name;
     for (var i = 0; i < SCREENS.length; i++) {
       var s = SCREENS[i];
@@ -391,10 +401,15 @@
       if (chSearch2) setTimeout(function () { setFocus(chSearch2); }, 60);
       return;
     }
-    // 3. Navigate back within the app
+    // 3. Navigate back within the app — go to previous screen in history
     if (currentScreen !== 'home') {
-      showScreen('home');
-      setTimeout(function () { setFocus(document.querySelector('.menu-item[data-screen="home"]')); }, 60);
+      var prev = screenHistory.length > 0 ? screenHistory.pop() : 'home';
+      showScreen(prev, true); // true = don't push to stack again
+      setTimeout(function () {
+        var target = document.querySelector('.menu-item[data-screen="' + prev + '"]') ||
+                     document.querySelector('#screen-' + prev + ' .focusable');
+        if (target) setFocus(target);
+      }, 60);
       return;
     }
     // 4. Already on home — do nothing (prevent app exit)
@@ -854,10 +869,15 @@
       for (var ii = 0; ii < items.length; ii++) {
         (function (it) {
           var btn = document.createElement('div');
-          btn.className = 'lib-item focusable' + (loadedPlaylistUrl === it.url ? ' lib-loaded' : '');
+          var isExtra = it.section.indexOf('Extra') !== -1;
+          btn.className = 'lib-item focusable' + (loadedPlaylistUrl === it.url ? ' lib-loaded' : '') + (isExtra ? ' lib-extra' : '');
           btn.setAttribute('tabindex', '-1');
           btn.setAttribute('data-liburl', it.url);
-          btn.textContent = it.name;
+          if (isExtra) {
+            btn.innerHTML = '<span class="lib-item-name">' + esc(it.name) + '</span><span class="lib-item-note">Not from iptv-org</span>';
+          } else {
+            btn.textContent = it.name;
+          }
           rowDiv.appendChild(btn);
         })(items[ii]);
       }
